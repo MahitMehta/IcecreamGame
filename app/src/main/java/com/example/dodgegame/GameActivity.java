@@ -6,8 +6,13 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.LinearGradient;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.RectF;
+import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -67,7 +72,12 @@ public class GameActivity extends AppCompatActivity {
 
             holder = getHolder();
 
-            cone = BitmapFactory.decodeResource(getResources(), R.drawable.cone_transparent);
+
+
+            Bitmap t = BitmapFactory.decodeResource(getResources(), R.drawable.cone_transparent);
+            cone = getResizedBitmap(t, t.getWidth()/2, t.getHeight()/2);
+
+
             background = BitmapFactory.decodeResource(getResources(), R.drawable.background);
 
             mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
@@ -103,21 +113,33 @@ public class GameActivity extends AppCompatActivity {
         @Override
         public void run() {
             Canvas canvas = null;
+
             Drawable d = getResources().getDrawable(R.drawable.background, null);
 
-            double ratio = background.getHeight() / (double) background.getWidth();
+            double ratio = (double)screenWidth/d.getIntrinsicWidth();
             int flip = 1;
             while(running){
                 if(!holder.getSurface().isValid()) continue;
                 canvas = holder.lockCanvas(null);
-                d.setBounds(0, screenWidth * (int) ratio, screenWidth, getBottom());
+
+
+
+                int shopTop = getBottom() - (int)(ratio * d.getIntrinsicHeight());
+                d.setBounds(getLeft(), shopTop, screenWidth, getBottom());
                 d.draw(canvas);
 
-                float maxXOffset = cone.getWidth() / 2;
-                Log.d("Pitch",  Pitch + "");
-                float xOffset = maxXOffset * ((float) Pitch / 90f);
+                //rgb(195,226,251)
+                Shader shader = new LinearGradient(0, 0, 0, shopTop, Color.argb(255, 195, 226, 251), Color.WHITE, Shader.TileMode.CLAMP);
+                Paint paint = new Paint();
+                paint.setShader(shader);
+                canvas.drawRect(new RectF(0, 0, getRight(), shopTop), paint);
 
-                canvas.drawBitmap(cone, xOffset, screenHeight/2, null);
+                float maxXOffset = screenWidth/2f;
+                float xOffset = maxXOffset * ((float) (Pitch+3.6) / 90f) + screenWidth/3f;
+
+                canvas.drawBitmap(cone, xOffset, screenHeight * 7f/8f, null);
+
+
                // if(ballX == screenWidth/2-cone.getWidth()/2 || ballX == -1*screenWidth/2+cone.getWidth()/2) flip*=-1;
                // ballX += flip;
                 holder.unlockCanvasAndPost(canvas);
@@ -141,6 +163,22 @@ public class GameActivity extends AppCompatActivity {
 
                 }
             }
+        }
+        public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
+            int width = bm.getWidth();
+            int height = bm.getHeight();
+            float scaleWidth = ((float) newWidth) / width;
+            float scaleHeight = ((float) newHeight) / height;
+            // CREATE A MATRIX FOR THE MANIPULATION
+            Matrix matrix = new Matrix();
+            // RESIZE THE BIT MAP
+            matrix.postScale(scaleWidth, scaleHeight);
+
+            // "RECREATE" THE NEW BITMAP
+            Bitmap resizedBitmap = Bitmap.createBitmap(
+                    bm, 0, 0, width, height, matrix, false);
+            bm.recycle();
+            return resizedBitmap;
         }
     }
 
