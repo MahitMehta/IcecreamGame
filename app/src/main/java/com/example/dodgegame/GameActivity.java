@@ -78,6 +78,8 @@ public class GameActivity extends AppCompatActivity {
 
         private long lastSpawnTime;
         private long spawnCooldown = 1500;
+        private final long timeLimit = 10000;
+        private long countDownStart;
 
 
         public GameSurface(Context ctx) {
@@ -132,7 +134,7 @@ public class GameActivity extends AppCompatActivity {
             Canvas canvas = null;
 
 
-            float coneXOffset = 3.6f/90 + screenWidth/3f;
+            float coneXOffset = screenWidth/2f - cone.getWidth();
             float offsetSpeed = 0;
 
             Drawable d = getResources().getDrawable(R.drawable.background, null);
@@ -142,11 +144,14 @@ public class GameActivity extends AppCompatActivity {
 
             lastSpawnTime = System.currentTimeMillis();
             coneTop = screenHeight * 7/8f;
+            countDownStart = System.currentTimeMillis();
+            int finalScore = -1;
 
 
             while(running){
                 if(!holder.getSurface().isValid()) continue;
                 canvas = holder.lockCanvas(null);
+
 
 
 
@@ -159,10 +164,30 @@ public class GameActivity extends AppCompatActivity {
                 paint.setShader(shader);
                 canvas.drawRect(new RectF(0, 0, getRight(), shopTop), paint);
 
-                float maxXOffset = screenWidth/2f;
+                paint = new Paint();
+                paint.setTextSize(50);
+                paint.setColor(Color.BLACK);
+                canvas.drawText((timeLimit + (countDownStart - System.currentTimeMillis())) / 1000f+"", 0, 50, paint);
+                canvas.drawText("Score: "+scoopsOnCone.size(), 0, 100, paint);
 
-                offsetSpeed += Pitch/90f;
-                if(coneXOffset > maxXOffset - cone.getWidth() || coneXOffset < -maxXOffset) offsetSpeed = 0;
+
+
+                if(timeLimit - countDownStart < 0){
+                    if(finalScore < 0)
+                        finalScore = scoopsOnCone.size();
+                    Paint paint1 = new Paint();
+                    paint1.setTextSize(100);
+                    paint1.setColor(Color.BLACK);
+                    paint1.setTextAlign(Paint.Align.CENTER);
+                    canvas.drawText("Score: " + scoopsOnCone.size(), 0, 500, paint1);
+                    canvas.drawText("Game Over", 0, 400, paint1);
+
+                }
+
+
+                offsetSpeed = (float) (Pitch/9f);
+                if(coneXOffset > screenWidth - cone.getWidth() && offsetSpeed > 0) offsetSpeed = 0;
+                if(coneXOffset < 0 && offsetSpeed < 0) offsetSpeed = 0;
                 coneXOffset += offsetSpeed;
 
                 canvas.drawBitmap(cone, coneXOffset, coneTop, null);
@@ -188,9 +213,6 @@ public class GameActivity extends AppCompatActivity {
                             && screenHeight * 7f/8f - 5 - scoopD * 3/2f < scoopBottom && screenHeight * 7f/8f - scoopD * 3/2f > scoopBottom){
                         addScoop(i);
                         i--;
-                    }
-                    if(scoopBottom > screenHeight + s.image.getHeight()){
-                        //gameover
                     }
 
                     canvas.drawBitmap(s.image, s.left, s.bottom, null);
