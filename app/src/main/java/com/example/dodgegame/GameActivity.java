@@ -283,9 +283,9 @@ public class GameActivity extends AppCompatActivity {
                 animStart = coneTop;
                 animEnd +=scoopD/2f;
             }
-            //MediaPlayer soundEffectsMP = MediaPlayer.create(GameActivity.this, R.raw.popsoundeffect);
-            //soundEffectsMP.setLooping(false);
-            //soundEffectsMP.start();
+            MediaPlayer soundEffectsMP = MediaPlayer.create(GameActivity.this, R.raw.plop);
+            soundEffectsMP.setLooping(false);
+            soundEffectsMP.start();
 
             scoopsFalling.remove(s);
             scoopsOnCone.add(scoop);
